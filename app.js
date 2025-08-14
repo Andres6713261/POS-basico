@@ -497,6 +497,8 @@ class POSSystem {
         });
         const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeBtn) activeBtn.classList.add('active');
+        // Ocultar el modal antes de cambiar de pestaña
+        this.hideRFIDModal();
         switch(tabName) {
             case 'pos':
                 this.updatePOS();
@@ -504,24 +506,19 @@ class POSSystem {
                 break;
             case 'historial':
                 this.updateHistorial();
-                this.hideRFIDModal();
                 break;
             case 'productos':
                 this.updateProductos();
-                this.hideRFIDModal();
                 break;
             case 'clientes':
                 this.updateClientes();
-                this.hideRFIDModal();
                 break;
             case 'categorias':
                 this.reloadDefaultCategories();
-                this.updateCategorias(); // <-- Asegura renderizado SIEMPRE
-                this.hideRFIDModal();
+                this.updateCategorias();
                 break;
             case 'informes':
                 this.updateInformes();
-                this.hideRFIDModal();
                 break;
         }
     }
@@ -946,13 +943,18 @@ class POSSystem {
         this.updateCart();
         this.focusSearchInput();
         // Ajuste solicitado:
-        // Deseleccionar cliente y mostrar modal de identificación
+        // Deseleccionar cliente y mostrar modal de identificación SOLO en POS
         this.currentClient = null;
         this.isGuestMode = false;
         this.isBlocked = false;
         this.updateClientInfo();
         this.updatePaymentButtons();
-        this.showRFIDModal();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'pos') {
+            this.showRFIDModal();
+        } else {
+            this.hideRFIDModal();
+        }
     }
 
     // Pagos

@@ -44,20 +44,8 @@
     <main class="main-content" style="margin-left:220px;transition:margin-left 0.3s;">
         <!-- Pestaña POS -->
         <div id="pos" class="tab-content active">
-            <div class="pos-header">
-                <div class="client-info">
-                    <span id="clientName">Sin identificar</span>
-                    <span id="clientBalance" class="balance"></span>
-                </div>
-                <div class="search-container">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar producto por nombre o código de barras..." autofocus>
-                </div>
-            </div>
+        <!-- Eliminado: pos-header vacía -->
 
-            <div class="popular-products">
-                <h3>Productos Populares</h3>
-                <div class="popular-grid" id="popularGrid"></div>
-            </div>
 
             <div class="pos-main">
                 <div class="favorites-column">
@@ -66,6 +54,10 @@
                 </div>
 
                 <div class="center-grid">
+                    <div class="popular-products pos-popular-unique">
+                        <h3>Productos Populares</h3>
+                        <div class="popular-grid" id="popularGrid"></div>
+                    </div>
                     <div class="grid-header">
                         <button id="gridBackBtn" class="btn btn--sm btn--outline hidden">← Volver</button>
                         <span id="gridTitle">Categorías</span>
@@ -79,7 +71,16 @@
                 </div>
 
                 <div class="cart-section">
-                    <h3>Carrito</h3>
+                    <div class="cart-header">
+                        <div class="client-info">
+                            <span id="clientName">Sin identificar</span>
+                            <span id="clientBalance" class="balance"></span>
+                        </div>
+                        <div class="search-container">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Buscar producto por nombre o código de barras..." autofocus>
+                        </div>
+                        <h3>Carrito</h3>
+                    </div>
                     <div class="cart-items" id="cartItems"></div>
                     <div class="cart-total">
                         <strong>Total: <span id="cartTotal">$0</span></strong>

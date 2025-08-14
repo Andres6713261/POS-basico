@@ -954,6 +954,7 @@ select.form-control {
   grid-template-columns: 200px 1fr 300px;
   gap: var(--space-20);
   min-height: 500px;
+  position: relative;
 }
 
 .favorites-column {
@@ -961,6 +962,7 @@ select.form-control {
   padding: var(--space-16);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-card-border);
+  position: relative;
 }
 
 .favorites-column h3 {
@@ -1175,6 +1177,17 @@ select.form-control {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-24);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% - 300px); /* Resta el ancho de la columna del carrito */
+  max-width: calc(100% - 300px);
+  z-index: 2;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-16);
 }
 
 .section-actions {
@@ -1262,6 +1275,7 @@ select.form-control {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  margin-top: 120px;
 }
 
 .recent-sale {
