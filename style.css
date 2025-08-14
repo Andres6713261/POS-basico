@@ -1451,6 +1451,19 @@ select.form-control {
   margin: 0.1em 0 !important;
 }
 
+/* Comandas impresas compactas */
+.comanda-receipt {
+  font-size: 0.7rem !important;
+  line-height: 1.05 !important;
+  padding: 0.5rem !important;
+  max-width: 320px !important;
+}
+.comanda-receipt h3, .comanda-receipt h4, .comanda-receipt p, .comanda-receipt ul, .comanda-receipt li {
+  font-size: 0.7em !important;
+  line-height: 1.05 !important;
+  margin: 0.1em 0 !important;
+}
+
 /* Responsive design */
 /* Mantener columnas en grid en todas las resoluciones */
 @media (max-width: 1200px), (max-width: 900px), (max-width: 768px), (max-width: 650px) {
