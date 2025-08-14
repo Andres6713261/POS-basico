@@ -1,5 +1,48 @@
 // Sistema POS - Aplicación completamente funcional
 class POSSystem {
+    // Agrega una compra al historial temporal del cliente
+    addPurchaseToPartial(clientId, venta) {
+        if (!this.partialPurchases) this.partialPurchases = {};
+        if (!Array.isArray(this.partialPurchases[clientId])) {
+            this.partialPurchases[clientId] = [];
+        }
+        this.partialPurchases[clientId].push(venta);
+    }
+    // Imprimir y vaciar historial parcial de compras
+    printPartialPurchases(clientId, monto) {
+        const cliente = this.getData('clientes').find(c => c.id === clientId);
+        // Inicializar arreglo temporal si no existe
+        if (!this.partialPurchases || typeof this.partialPurchases !== 'object') {
+            this.partialPurchases = {};
+        }
+        if (!Array.isArray(this.partialPurchases[clientId])) {
+            this.partialPurchases[clientId] = [];
+        }
+        const compras = Array.isArray(this.partialPurchases[clientId]) ? this.partialPurchases[clientId] : [];
+        let html = `<div class='receipt'><h3>Recibo de Recarga</h3><p>Cliente: ${cliente ? cliente.nombre : ''}</p><p>Monto recargado: ${this.formatCurrency(monto)}</p>`;
+        html += `<hr><h4>Compras desde última recarga:</h4>`;
+        if (!compras || compras.length === 0) {
+            html += `<div class='status status--info'>No hay compras desde la última recarga.</div>`;
+        } else {
+            for (let i = 0; i < compras.length; i++) {
+                const v = compras[i];
+                html += `<div><strong>Venta #${v.id} (${v.fecha} ${v.hora})</strong><ul>`;
+                if (Array.isArray(v.productos)) {
+                    for (let j = 0; j < v.productos.length; j++) {
+                        const p = v.productos[j];
+                        html += `<li>${p.nombre} x${p.cantidad} - ${this.formatCurrency(p.precio * p.cantidad)}</li>`;
+                    }
+                }
+                html += `</ul></div>`;
+            }
+        }
+        html += `<hr><p>Saldo actual: ${cliente ? this.formatCurrency(cliente.saldo) : ''}</p></div>`;
+        this.showReceiptModal(html);
+        // Vaciar historial parcial SOLO después de mostrar el recibo
+        setTimeout(() => {
+            this.partialPurchases[clientId] = [];
+        }, 500);
+    }
     // Eliminar producto
     deleteProduct(productId) {
         let productos = this.getData('productos');
@@ -999,6 +1042,11 @@ class POSSystem {
         ventas.push(venta);
         this.setData('ventas', ventas);
 
+        // Si es cliente identificado y el saldo queda negativo, guardar en parcial
+        if (this.currentClient && !this.isGuestMode && this.currentClient.saldo - total < 0) {
+            this.addPurchaseToPartial(this.currentClient.id, venta);
+        }
+
         // Actualizar saldo del cliente si aplica
         if (this.currentClient && !this.isGuestMode) {
             const clientes = this.getData('clientes');
@@ -1073,6 +1121,8 @@ class POSSystem {
             alert('Debes identificar un cliente antes de realizar una recarga.');
             return;
         }
+        // Imprimir recibo de compras acumuladas antes de mostrar el modal
+        this.printPartialPurchases(this.currentClient.id, 0);
         const modal = document.getElementById('debtPaymentModal');
         const input = document.getElementById('debtPaymentInput');
         const clientInfo = document.getElementById('debtPaymentClientInfo');
@@ -1104,7 +1154,8 @@ class POSSystem {
                 const recargas = this.currentClient.recargas;
                 const recargaAnterior = recargas.length > 0 ? recargas[recargas.length - 1] : null;
                 let nuevoSaldo = this.currentClient.saldo + monto;
-                this.printRecargaReceipt(monto, recargaAnterior ? recargaAnterior.fecha : null);
+                // Vaciar historial parcial SOLO al confirmar la operación
+                this.partialPurchases[this.currentClient.id] = [];
                 const fechaRecarga = new Date().toISOString();
                 this.currentClient.recargas.push({ fecha: fechaRecarga, monto });
                 this.currentClient.saldo = nuevoSaldo;
@@ -1122,45 +1173,6 @@ class POSSystem {
         this.finalizeSaleFlow();
     }
 
-    printRecargaReceipt(monto, fechaInicio) {
-        const ventas = this.getData('ventas');
-        const cliente = this.currentClient;
-        const recargas = cliente.recargas || [];
-        let fechaIni = null;
-        let fechaIniStr = '';
-        if (recargas.length > 1) {
-            // Última recarga anterior
-            fechaIniStr = recargas[recargas.length - 2].fecha;
-            fechaIni = new Date(fechaIniStr);
-        } else if (recargas.length === 1) {
-            // Primera recarga, mostrar todas las ventas
-            fechaIni = null;
-        }
-        // Filtrar ventas después de la última recarga anterior
-        let ventasCliente = ventas.filter(v => {
-            if (v.clienteId !== cliente.id) return false;
-            // Unificar formato de fecha/hora
-            let ventaDateStr = v.fecha + (v.hora ? 'T' + v.hora : 'T00:00');
-            let ventaDate = new Date(ventaDateStr);
-            return (!fechaIni || ventaDate > fechaIni);
-        });
-        let html = `<div class='receipt'><h3>Recibo de Recarga</h3><p>Cliente: ${cliente.nombre}</p><p>Monto recargado: ${this.formatCurrency(monto)}</p>`;
-        if (fechaIniStr) html += `<p>Compras desde: ${new Date(fechaIniStr).toLocaleString()}</p>`;
-        html += `<hr><h4>Compras desde última recarga:</h4>`;
-        if (ventasCliente.length === 0) {
-            html += `<div class='status status--info'>No hay compras desde la última recarga.</div>`;
-        } else {
-            ventasCliente.forEach(v => {
-                html += `<div><strong>Venta #${v.id} (${v.fecha} ${v.hora})</strong><ul>`;
-                v.productos.forEach(p => {
-                    html += `<li>${p.nombre} x${p.cantidad} - ${this.formatCurrency(p.precio * p.cantidad)}</li>`;
-                });
-                html += `</ul></div>`;
-            });
-        }
-        html += `<hr><p>Saldo actual: ${this.formatCurrency(cliente.saldo)}</p></div>`;
-        this.showReceiptModal(html);
-    }
 
     // --- INICIO: Métodos para gestión de productos desde categorías ---
     updateCategorias() {
