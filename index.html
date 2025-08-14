@@ -382,26 +382,39 @@
 
     <script src="app.js"></script>
     <script>
-    // Mostrar/ocultar barra lateral
+    // Mostrar/ocultar barra lateral y guardar estado
     const sideNav = document.getElementById('sideNav');
     const toggleNavBtn = document.getElementById('toggleNavBtn');
     const mainContent = document.querySelector('.main-content');
     let navVisible = true;
     function setNavVisibility(visible) {
         navVisible = visible;
+        localStorage.setItem('navVisible', visible ? '1' : '0');
+        // Detectar ancho para animación correcta
+        let navWidth = sideNav.offsetWidth || 220;
+        if (window.innerWidth <= 600) navWidth = window.innerWidth * 0.7;
         if (visible) {
             sideNav.style.left = '0';
-            mainContent.style.marginLeft = '220px';
+            mainContent.style.marginLeft = window.innerWidth > 900 ? navWidth + 'px' : '0';
         } else {
-            sideNav.style.left = '-220px';
+            sideNav.style.left = '-' + navWidth + 'px';
             mainContent.style.marginLeft = '0';
         }
     }
     toggleNavBtn.addEventListener('click', () => {
         setNavVisibility(!navVisible);
     });
-    // Inicializar visible
-    setNavVisibility(true);
+    // Restaurar estado al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('navVisible');
+        setNavVisibility(saved === '0' ? false : true);
+    });
+    // Sincronizar estado entre pestañas
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'navVisible') {
+            setNavVisibility(e.newValue === '1');
+        }
+    });
     </script>
 </body>
 </html>
