@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema POS</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Modal de Identificación RFID -->
+    <div id="rfidModal" class="modal">
+        <div class="modal__content">
+            <h2>Identificación RFID</h2>
+            <div class="form-group">
+                <label for="rfidInput" class="form-label">Código RFID:</label>
+                <input type="text" id="rfidInput" class="form-control" placeholder="Ingrese código RFID" autofocus>
+            </div>
+            <div id="rfidError" class="status status--error hidden">Cliente no encontrado</div>
+            <div class="modal__actions">
+                <button id="guestBtn" class="btn btn--secondary">Invitado</button>
+                <button id="cancelBtn" class="btn btn--outline">Cancelar</button>
+                <button id="confirmRfidBtn" class="btn btn--primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación principal -->
+    <nav class="main-nav">
+        <button class="nav-btn active" data-tab="pos">POS</button>
+        <button class="nav-btn" data-tab="historial">Historial</button>
+        <button class="nav-btn" data-tab="productos">Productos</button>
+        <button class="nav-btn" data-tab="clientes">Clientes</button>
+        <button class="nav-btn" data-tab="categorias">Categorías</button>
+        <button class="nav-btn" data-tab="informes">Informes</button>
+        <button class="nav-btn" data-tab="dashboard">Dashboard</button>
+        <button class="nav-btn" data-tab="backup">Backup</button>
+    </nav>
+
+    <main class="main-content">
+        <!-- Pestaña POS -->
+        <div id="pos" class="tab-content active">
+            <div class="pos-header">
+                <div class="client-info">
+                    <span id="clientName">Sin identificar</span>
+                    <span id="clientBalance" class="balance"></span>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar producto por nombre o código de barras..." autofocus>
+                </div>
+            </div>
+
+            <div class="popular-products">
+                <h3>Productos Populares</h3>
+                <div class="popular-grid" id="popularGrid"></div>
+            </div>
+
+            <div class="pos-main">
+                <div class="favorites-column">
+                    <h3>Favoritos</h3>
+                    <div class="favorites-list" id="favoritesList"></div>
+                </div>
+
+                <div class="center-grid">
+                    <div class="grid-header">
+                        <button id="gridBackBtn" class="btn btn--sm btn--outline hidden">← Volver</button>
+                        <span id="gridTitle">Categorías</span>
+                        <div class="grid-navigation">
+                            <button id="prevPageBtn" class="btn btn--sm btn--outline">←</button>
+                            <span id="pageInfo">1/1</span>
+                            <button id="nextPageBtn" class="btn btn--sm btn--outline">→</button>
+                        </div>
+                    </div>
+                    <div class="products-grid" id="productsGrid"></div>
+                </div>
+
+                <div class="cart-section">
+                    <h3>Carrito</h3>
+                    <div class="cart-items" id="cartItems"></div>
+                    <div class="cart-total">
+                        <strong>Total: <span id="cartTotal">$0</span></strong>
+                    </div>
+                    <div class="payment-buttons">
+                        <button id="payDCBtn" class="btn btn--primary btn--full-width">PAGO</button>
+                        <button id="payGuestBtn" class="btn btn--primary btn--full-width hidden">PAGO</button>
+                        <button id="payDebtBtn" class="btn btn--secondary btn--full-width">Pago Deuda</button>
+                        <button id="discardBtn" class="btn btn--outline btn--full-width">Descartar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña Historial -->
+        <div id="historial" class="tab-content">
+            <div class="section-header">
+                <h2>Historial</h2>
+                <div class="tab-buttons">
+                    <button class="btn btn--primary active" data-history-tab="ventas">Ventas</button>
+                    <button class="btn btn--outline" data-history-tab="comandas">Comandas</button>
+                </div>
+            </div>
+            <div id="ventasHistory" class="history-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ventasTableBody"></tbody>
+                </table>
+            </div>
+            <div id="comandasHistory" class="history-content hidden">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Productos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comandasTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pestaña Productos -->
+        <div id="productos" class="tab-content">
+            <div class="section-header">
+                <h2>Gestión de Productos</h2>
+                <div class="section-actions">
+                    <button id="addProductBtn" class="btn btn--primary">Agregar Producto</button>
+                    <button id="importProductsBtn" class="btn btn--secondary">Importar XLSX</button>
+                    <button id="downloadTemplateBtn" class="btn btn--outline">Descargar Plantilla</button>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            <table class="data-table">
+                <div style="margin-bottom: 10px;">
+                    <button id="deleteSelectedProductsBtn" class="btn btn--danger">Eliminar seleccionados</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllProducts"></th>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Código de Barras</th>
+                            <th>Categoría</th>
+                            <th>Favorito</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productosTableBody"></tbody>
+                </table>
+        </div>
+
+        <!-- Pestaña Clientes -->
+        <div id="clientes" class="tab-content">
+            <div class="section-header">
+                <h2>Gestión de Clientes</h2>
+                <button id="addClientBtn" class="btn btn--primary">Agregar Cliente</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Identificación</th>
+                        <th>Tarjeta RFID</th>
+                        <th>Saldo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="clientesTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Pestaña Categorías -->
+        <div id="categorias" class="tab-content">
+            <div class="section-header">
+                <h2>Gestión de Categorías</h2>
+                <button id="addCategoryBtn" class="btn btn--primary">Agregar Categoría</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriasTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Pestaña Informes -->
+        <div id="informes" class="tab-content">
+            <div class="section-header">
+                <h2>Informes</h2>
+            </div>
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Ventas por Rango</h3>
+                    <div class="form-group">
+                        <label class="form-label">Fecha desde:</label>
+                        <input type="date" id="fechaDesde" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha hasta:</label>
+                        <input type="date" id="fechaHasta" class="form-control">
+                    </div>
+                    <button id="generateRangeReportBtn" class="btn btn--primary">Generar Reporte</button>
+                    <button id="exportRangeReportBtn" class="btn btn--secondary hidden">Exportar Excel</button>
+                    <div id="rangeReportContent"></div>
+                </div>
+                <div class="report-card">
+                    <h3>Total por Cliente</h3>
+                    <div class="form-group">
+                        <label class="form-label">Buscar cliente:</label>
+                        <input type="text" id="clientSearchInput" class="form-control" placeholder="Buscar por nombre...">
+                    </div>
+                    <button id="generateClientReportBtn" class="btn btn--primary">Generar Reporte</button>
+                    <button id="exportClientReportBtn" class="btn btn--secondary hidden">Exportar Excel</button>
+                    <div id="clientReportContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña Dashboard -->
+        <div id="dashboard" class="tab-content">
+            <div class="section-header">
+                <h2>Dashboard - Métricas del Día</h2>
+            </div>
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <h3>Total Vendido Hoy</h3>
+                    <div class="metric-value" id="totalVendidoHoy">$0</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Clientes Atendidos</h3>
+                    <div class="metric-value" id="clientesAtendidos">0</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Producto Más Vendido</h3>
+                    <div class="metric-value" id="productoMasVendido">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Ventas Realizadas</h3>
+                    <div class="metric-value" id="ventasRealizadas">0</div>
+                </div>
+            </div>
+            <div class="dashboard-section">
+                <h3>Últimas 5 Ventas</h3>
+                <div id="ultimasVentas" class="recent-sales"></div>
+            </div>
+        </div>
+
+        <!-- Pestaña Backup -->
+        <div id="backup" class="tab-content">
+            <div class="section-header">
+                <h2>Backup y Restauración</h2>
+            </div>
+            <div class="backup-grid">
+                <div class="backup-card">
+                    <h3>Exportar Datos</h3>
+                    <p>Exportar todos los datos del sistema a un archivo de respaldo.</p>
+                    <button id="exportDataBtn" class="btn btn--primary">Exportar Datos</button>
+                </div>
+                <div class="backup-card">
+                    <h3>Importar Datos</h3>
+                    <p>Importar datos desde un archivo de respaldo. Esto reemplazará todos los datos existentes.</p>
+                    <input type="file" id="importFileInput" accept=".json" class="form-control">
+                    <button id="importDataBtn" class="btn btn--secondary">Importar Datos</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para formularios -->
+    <div id="formModal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3 id="modalTitle">Formulario</h3>
+            </div>
+            <div class="modal__body" id="modalBody">
+                <!-- El contenido del formulario se insertará aquí -->
+            </div>
+            <div class="modal__actions">
+                <button id="cancelModalBtn" class="btn btn--outline">Cancelar</button>
+                <button id="saveModalBtn" class="btn btn--primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de venta -->
+    <div id="saleDetailModal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>Detalles de Venta</h3>
+            </div>
+            <div class="modal__body" id="saleDetailBody">
+                <!-- Los detalles de la venta se insertarán aquí -->
+            </div>
+            <div class="modal__actions">
+                <button id="reprintSaleBtn" class="btn btn--secondary">Reimprimir</button>
+                <button id="closeSaleDetailBtn" class="btn btn--primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de comanda -->
+    <div id="comandaDetailModal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>Detalles de Comanda</h3>
+            </div>
+            <div class="modal__body" id="comandaDetailBody">
+                <!-- Los detalles de la comanda se insertarán aquí -->
+            </div>
+            <div class="modal__actions">
+                <button id="reprintComandaBtn" class="btn btn--secondary">Reimprimir</button>
+                <button id="closeComandaDetailBtn" class="btn btn--primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para pago deuda -->
+    <div id="debtPaymentModal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>Pago Deuda</h3>
+            </div>
+            <div class="modal__body">
+                <div class="client-debt-info">
+                    <p><strong>Cliente:</strong> <span id="debtClientName"></span></p>
+                    <p><strong>Saldo actual:</strong> <span id="debtClientBalance"></span></p>
+                </div>
+                <div id="debtPaymentClientInfo" style="margin-bottom:10px;"></div>
+                <div class="form-group">
+                    <label class="form-label">Monto a pagar:</label>
+                    <input type="number" id="debtAmountInput" class="form-control" placeholder="Ingrese el monto" min="0">
+                </div>
+            </div>
+            <div class="modal__actions">
+                <button id="cancelDebtBtn" class="btn btn--outline">Cancelar</button>
+                <button id="confirmDebtBtn" class="btn btn--primary">Confirmar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3 id="confirmTitle">Confirmar</h3>
+            </div>
+            <div class="modal__body">
+                <p id="confirmMessage">¿Está seguro?</p>
+            </div>
+            <div class="modal__actions">
+                <button id="confirmCancelBtn" class="btn btn--outline">Cancelar</button>
+                <button id="confirmOkBtn" class="btn btn--primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de impresión oculta -->
+    <div id="printArea" class="print-area hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
