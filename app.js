@@ -1121,8 +1121,8 @@ class POSSystem {
             alert('Debes identificar un cliente antes de realizar una recarga.');
             return;
         }
-        // Imprimir recibo de compras acumuladas antes de mostrar el modal
-        this.printPartialPurchases(this.currentClient.id, 0);
+        // Impresión física automática de las compras acumuladas
+        this.printPartialPurchasesPhysical(this.currentClient.id);
         const modal = document.getElementById('debtPaymentModal');
         const input = document.getElementById('debtPaymentInput');
         const clientInfo = document.getElementById('debtPaymentClientInfo');
@@ -1140,6 +1140,44 @@ class POSSystem {
             if (input) input.value = '';
         }
     }
+
+    // Impresión física automática del recibo de compras acumuladas
+    printPartialPurchasesPhysical(clientId) {
+        const cliente = this.getData('clientes').find(c => c.id === clientId);
+        if (!cliente) return;
+        if (!this.partialPurchases || typeof this.partialPurchases !== 'object') {
+            this.partialPurchases = {};
+        }
+        if (!Array.isArray(this.partialPurchases[clientId])) {
+            this.partialPurchases[clientId] = [];
+        }
+        const compras = Array.isArray(this.partialPurchases[clientId]) ? this.partialPurchases[clientId] : [];
+        let html = `<div class='receipt'><h3>Recibo de Compras a Crédito</h3><p>Cliente: ${cliente ? cliente.nombre : ''}</p>`;
+        html += `<hr><h4>Compras acumuladas:</h4>`;
+        if (!compras || compras.length === 0) {
+            html += `<div class='status status--info'>No hay compras acumuladas.</div>`;
+        } else {
+            for (let i = 0; i < compras.length; i++) {
+                const v = compras[i];
+                html += `<div><strong>Venta #${v.id} (${v.fecha} ${v.hora})</strong><ul>`;
+                if (Array.isArray(v.productos)) {
+                    for (let j = 0; j < v.productos.length; j++) {
+                        const p = v.productos[j];
+                        html += `<li>${p.nombre} x${p.cantidad} - ${this.formatCurrency(p.precio * p.cantidad)}</li>`;
+                    }
+                }
+                html += `</ul></div>`;
+            }
+        }
+        html += `<hr><p>Saldo actual: ${cliente ? this.formatCurrency(cliente.saldo) : ''}</p></div>`;
+        // Impresión física automática sin mostrar modal
+        const printWindow = window.open('', '', 'width=400,height=600');
+        printWindow.document.write(`<html><head><title>Recibo</title><link rel='stylesheet' href='style.css'></head><body>${html}</body></html>`);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
     hideDebtPaymentModal() {
         const modal = document.getElementById('debtPaymentModal');
         if (modal) modal.classList.add('hidden');
@@ -1154,7 +1192,7 @@ class POSSystem {
                 const recargas = this.currentClient.recargas;
                 const recargaAnterior = recargas.length > 0 ? recargas[recargas.length - 1] : null;
                 let nuevoSaldo = this.currentClient.saldo + monto;
-                // Vaciar historial parcial SOLO al confirmar la operación
+                // Vaciar historial parcial SOLO si la recarga se confirma
                 this.partialPurchases[this.currentClient.id] = [];
                 const fechaRecarga = new Date().toISOString();
                 this.currentClient.recargas.push({ fecha: fechaRecarga, monto });
@@ -1164,9 +1202,11 @@ class POSSystem {
                 this.setData('clientes', clientes);
                 this.updateClientInfo();
             } else {
+                // Si el monto no es válido, NO se borra el arreglo
                 alert('El monto debe ser mayor a cero.');
             }
         } else {
+            // Si no hay cliente, NO se borra el arreglo
             alert('No se pudo realizar la recarga. Verifica el cliente.');
         }
         this.hideDebtPaymentModal();
