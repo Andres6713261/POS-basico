@@ -1098,11 +1098,11 @@ class POSSystem {
 
     printComanda(comanda) {
         // Imprime el recibo de la comanda en un modal y reinicia el POS automáticamente
-        let html = `<div class='receipt'><h3>Comanda Restaurante</h3><p>Cliente: ${comanda.cliente}</p><p>Fecha: ${comanda.fecha} ${comanda.hora}</p><hr><ul>`;
+    let html = `<div class='comanda-receipt'><h3>Comanda Restaurante</h3><p>Cliente: ${comanda.cliente}</p><p>Fecha: ${comanda.fecha} ${comanda.hora}</p><hr><ul>`;
         comanda.productos.forEach(p => {
             html += `<li>${p.nombre} x${p.cantidad}</li>`;
         });
-        html += `</ul></div>`;
+    html += `</ul></div>`;
         // Imprimir automáticamente y cerrar el modal
         const printWindow = window.open('', '', 'width=400,height=600');
         printWindow.document.write(`<html><head><title>Comanda</title><link rel='stylesheet' href='style.css'></head><body>${html}</body></html>`);
@@ -1152,7 +1152,7 @@ class POSSystem {
             this.partialPurchases[clientId] = [];
         }
         const compras = Array.isArray(this.partialPurchases[clientId]) ? this.partialPurchases[clientId] : [];
-        let html = `<div class='receipt'><h3>Recibo de Compras a Crédito</h3><p>Cliente: ${cliente ? cliente.nombre : ''}</p>`;
+    let html = `<div class='receipt'><h3>Recibo de Compras a Crédito</h3><p>Cliente: ${cliente ? cliente.nombre : ''}</p>`;
         html += `<hr><h4>Compras acumuladas:</h4>`;
         if (!compras || compras.length === 0) {
             html += `<div class='status status--info'>No hay compras acumuladas.</div>`;
