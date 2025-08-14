@@ -739,6 +739,75 @@ select.form-control {
 
 /* END PERPLEXITY DESIGN SYSTEM */
 /* Estilos específicos para la aplicación POS */
+/* Barra lateral y botón hamburguesa */
+.side-nav {
+  background: var(--color-surface);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+  border-right: 1px solid var(--color-border);
+  padding-top: 32px;
+  min-width: 220px;
+  width: 220px;
+  height: 100vh;
+  z-index: 1099;
+  transition: left 0.3s;
+}
+
+#toggleNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 1.5em;
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#toggleNavBtn:hover {
+  background: var(--color-primary-hover);
+}
+
+@media (max-width: 900px) {
+  .side-nav {
+    min-width: 180px;
+    width: 180px;
+    padding-top: 24px;
+  }
+  #toggleNavBtn {
+    top: 8px;
+    left: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.3em;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .side-nav {
+    min-width: 70vw;
+    width: 70vw;
+    padding-top: 16px;
+    left: -70vw;
+    box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+  }
+  #toggleNavBtn {
+    top: 4px;
+    left: 4px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1em;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
 
 .main-nav {
   display: flex;

@@ -25,8 +25,12 @@
         </div>
     </div>
 
-    <!-- Navegación principal -->
-    <nav class="main-nav">
+
+    <!-- Botón para mostrar/ocultar barra lateral -->
+    <button id="toggleNavBtn" class="btn btn--primary" style="position:fixed;top:16px;left:16px;z-index:1100;">☰</button>
+
+    <!-- Barra de navegación lateral -->
+    <nav id="sideNav" class="main-nav side-nav" style="position:fixed;top:0;left:0;height:100vh;width:220px;display:flex;flex-direction:column;z-index:1099;transition:left 0.3s;">
         <button class="nav-btn active" data-tab="pos">POS</button>
         <button class="nav-btn" data-tab="historial">Historial</button>
         <button class="nav-btn" data-tab="productos">Productos</button>
@@ -37,7 +41,7 @@
         <button class="nav-btn" data-tab="backup">Backup</button>
     </nav>
 
-    <main class="main-content">
+    <main class="main-content" style="margin-left:220px;transition:margin-left 0.3s;">
         <!-- Pestaña POS -->
         <div id="pos" class="tab-content active">
             <div class="pos-header">
@@ -377,5 +381,27 @@
     <div id="printArea" class="print-area hidden"></div>
 
     <script src="app.js"></script>
+    <script>
+    // Mostrar/ocultar barra lateral
+    const sideNav = document.getElementById('sideNav');
+    const toggleNavBtn = document.getElementById('toggleNavBtn');
+    const mainContent = document.querySelector('.main-content');
+    let navVisible = true;
+    function setNavVisibility(visible) {
+        navVisible = visible;
+        if (visible) {
+            sideNav.style.left = '0';
+            mainContent.style.marginLeft = '220px';
+        } else {
+            sideNav.style.left = '-220px';
+            mainContent.style.marginLeft = '0';
+        }
+    }
+    toggleNavBtn.addEventListener('click', () => {
+        setNavVisibility(!navVisible);
+    });
+    // Inicializar visible
+    setNavVisibility(true);
+    </script>
 </body>
 </html>
