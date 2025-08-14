@@ -32,9 +32,14 @@ class POSSystem {
         // Configurar event listeners
         this.setupEventListeners();
         
-        // Mostrar modal RFID al inicio
+        // Mostrar modal RFID solo si la pestaña activa es POS
         setTimeout(() => {
-            this.showRFIDModal();
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab && activeTab.id === 'pos') {
+                this.showRFIDModal();
+            } else {
+                this.hideRFIDModal();
+            }
         }, 100);
         
         // Actualizar UI inicial
@@ -495,22 +500,28 @@ class POSSystem {
         switch(tabName) {
             case 'pos':
                 this.updatePOS();
+                this.showRFIDModal();
                 break;
             case 'historial':
                 this.updateHistorial();
+                this.hideRFIDModal();
                 break;
             case 'productos':
                 this.updateProductos();
+                this.hideRFIDModal();
                 break;
             case 'clientes':
                 this.updateClientes();
+                this.hideRFIDModal();
                 break;
             case 'categorias':
                 this.reloadDefaultCategories();
                 this.updateCategorias(); // <-- Asegura renderizado SIEMPRE
+                this.hideRFIDModal();
                 break;
             case 'informes':
                 this.updateInformes();
+                this.hideRFIDModal();
                 break;
         }
     }
