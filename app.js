@@ -512,9 +512,6 @@ class POSSystem {
             case 'informes':
                 this.updateInformes();
                 break;
-            case 'dashboard':
-                this.updateDashboard();
-                break;
         }
     }
 
