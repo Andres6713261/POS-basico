@@ -662,8 +662,8 @@ class POSSystem {
     }
 
     updateFavoriteProducts() {
-        const productos = this.getData('productos');
-        const favoritos = productos.filter(p => p.favorito).slice(0, 4);
+    const productos = this.getData('productos');
+    const favoritos = productos.filter(p => p.favorito).slice(0, 6);
 
         const favoritesList = document.getElementById('favoritesList');
         if (favoritesList) {
@@ -1555,7 +1555,7 @@ class POSSystem {
                     <td>${this.formatCurrency(producto.precio)}</td>
                     <td>${producto.codigoBarras}</td>
                     <td>${categoria ? categoria.nombre : '-'}</td>
-                    <td>${producto.favorito ? 'Sí' : 'No'}</td>
+                    <td><input type="checkbox" class="favorito-check" data-id="${producto.id}" ${producto.favorito ? 'checked' : ''}></td>
                     <td class="action-buttons">
                         <button class="btn btn--sm btn--primary" onclick="window.posSystem.editProduct(${producto.id})">Editar</button>
                         <button class="btn btn--sm btn--outline" onclick="window.posSystem.deleteProduct(${producto.id})">Eliminar</button>
@@ -1589,6 +1589,32 @@ class POSSystem {
                 this.updateProductos();
             };
         }
+        // Guardar cambios al marcar/desmarcar favorito
+        document.querySelectorAll('.favorito-check').forEach(cb => {
+            cb.onchange = (e) => {
+                const id = parseInt(cb.dataset.id);
+                let productos = this.getData('productos');
+                const idx = productos.findIndex(p => p.id === id);
+                if (idx !== -1) {
+                    // Validar máximo 6 favoritos
+                    const favoritosMarcados = productos.filter(p => p.favorito).length;
+                    if (!cb.checked && productos[idx].favorito) {
+                        // Se está desmarcando, permitir
+                        productos[idx].favorito = false;
+                        this.setData('productos', productos);
+                        this.updateFavoriteProducts();
+                    } else if (cb.checked && favoritosMarcados >= 6) {
+                        // Ya hay 6 favoritos, no permitir marcar más
+                        cb.checked = false;
+                        alert('Solo puedes seleccionar hasta 6 favoritos.');
+                    } else {
+                        productos[idx].favorito = cb.checked;
+                        this.setData('productos', productos);
+                        this.updateFavoriteProducts();
+                    }
+                }
+            };
+        });
     }
 
     // Import/Export
